@@ -1,0 +1,30 @@
+{
+  "dependencies": {
+    "aws-sdk": ">= 2.0.9",
+    "body-parser": "^1.17.2",
+    "debug": "*",
+    "express": "^4.15.3",
+    "mysql": "^2.13.0",
+    "node-uuid": ">= 1.4.1",
+    "proxy-agent": "^2.0.0",
+    "require": "^2.4.20"
+  },
+  "name": "summarizers",
+  "description": "----",
+  "version": "1.0.9",
+  "main": "server.js",
+  "devDependencies": {},
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ChandrakantThakkarDigiCorp/s3-nodejs-sample.git"
+  },
+  "keywords": [
+    "s3",
+    "aws",
+    "nodejs",
+    "sample"
+  ]
+}

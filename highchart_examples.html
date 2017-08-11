@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Time Series Analysis</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.js"></script>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/css/bootstrap-datepicker.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.3/css/bootstrap-select.min.css">
+<!-- <link rel="stylesheet" href="services/lib/ag-grid/dist/styles/ag-grid.css">
+<link rel="stylesheet" href="services/lib/ag-grid/dist/styles/theme-fresh.css">
+<link rel="stylesheet" href="services/lib/ag-grid/dist/styles/theme-dark.css"> -->
+
+
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/js/bootstrap-datepicker.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.3/js/bootstrap-select.min.js"></script>
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+
+<!-- Ag-grid -->
+<script type="text/JavaScript" src="services/lib/ag-grid/dist/ag-grid.js"></script>
+<script type="text/JavaScript" src="services/js/table.js"></script>
+
+</head>
+    <style>
+        table td th{
+            padding:5px;
+            text-align:center;
+            background-color: '#302e2e';
+        }
+        .tableDiv{
+            border: 1px solid #a28484;
+            border-radius: 10px;
+        }
+    
+    </style>
+<body style="background-color: #333;">
+    <div class="container-fluid" >
+         <div class="col-md-12 row"><span style="color: white;font-size: x-large;"><B>Time Series Analysis</B></span></div>
+        <div class="row col-md-4" style="valign:center">
+            <table  class="table" bgcolor="#414747">
+            <tr><td>
+                <label style="color: white;">Range</label></td>
+               <td>
+                <select id="yaxis" class="selectpicker" onchange=drawChart() style="height: 35px;min-width: 160px;" placeholder="Select Range">
+                  <option value="1Y">1 Year</option>
+                  <option value="2Y">2 Years</option>
+                  <option value="3Y">3 Years</option>
+                  <option value="4Y">4 Years</option>
+                  <option value="5Y">5 Years</option>
+                </select>
+                </td></tr>
+            <tr><td>
+                <label style="color: white;">Security</label></td>
+                <td><select id="securities" data-live-search="true" class="selectpicker" onchange="setAttrs()" style="height: 35px;min-width: 160px;">
+                </select>
+            </td></tr>
+           <tr><td>
+               <label style="color: white;">Attributes</label></td>
+                <td><select id="attrs" class="selectpicker" multiple onchange="drawChart()" style="height: 35px;min-width: 160px;">
+                </select>
+            </td></tr>
+            </table>
+        </div>
+        <div class="col-md-8"><div id="myGrid" style="height: 150px; width: 800px; margin-left:50px;" class="ag-dark"></div></div>
+        <div class="row col-md-12" style="margin-top: 20px;">
+            <div>
+                <div id="myLineChart"></div>
+            </div>
+        </div> 
+        
+    </div>
+</body>
+<script>
+    var url = 'http://localhost:8080/api';
+    $(document).ready(function(){
+        $.ajax({
+          url: url+"/getSecurities"
+        }).done(function(data) {
+            $.each(data, function(index, obj) {
+                $('#securities').append( $('<option></option>').val(obj.id).html(obj.name) );
+            }); 
+            $('#securities').selectpicker('refresh');
+            setAttrs();
+        });
+    });
+    $(window).on("load",function(){
+        drawTable();
+    });
+    function drawTable(){
+        var gridDiv = document.querySelector('#myGrid');
+        new agGrid.Grid(gridDiv, gridOptions);
+        console.log(gridOptions);
+    }
+    
+    function setAttrs(){
+        var security = $('#securities').val();
+        $.ajax({
+          url: url+"/getSecurityAttrs?security="+security
+        }).done(function(data) {
+            $('#attrs').html('');
+            $.each(data, function(index, obj) {
+                $('#attrs').append( $('<option></option>').val(obj.val).text(obj.text));
+            }); 
+            $('#attrs').selectpicker('refresh');
+            drawChart();
+            
+        });
+    }
+        
+    function drawChart(){
+        var security = $('#securities').val();
+        var attr = $('#attrs').val();
+        var range = $('#yaxis').val();
+        var chart = $('#chart').val();
+        var dataArr = [];
+        var oas = [];
+        var price = [];
+        var yield = [];
+        $.ajax({
+          url: url+"/getView?security="+security+"&attr="+attr+"&range="+range
+        }).done(function(data) {
+          gridOptions.api.setRowData(JSON.parse(data).rawData);
+            $.each(JSON.parse(data).rawData, function(index, obj) {
+                oas.push([Date.parse(obj.effDate), obj.oas]);
+                 yield.push([Date.parse(obj.effDate), obj.yield]);
+                price.push([Date.parse(obj.effDate), obj.price]);
+        }); 
+        dataArr.push(oas);
+        dataArr.push(price);
+        dataArr.push(yield);
+        drawLineChart('myLineChart', dataArr, JSON.parse(data).aggregations);
+        });
+    }
+    
+    function getSeries(seriesData){
+    var attr = $('#attrs').val();
+    var series = [];
+    if(attr.indexOf('oas') != -1){
+        series.push({
+            name: 'OAS',
+            data: seriesData[0],
+            color: '#2896A1'
+        });
+    }
+    if(attr.indexOf('yield') != -1){
+        series.push({
+            name: 'YIELD',
+            data: seriesData[2],
+            color: '#1E7589'
+        });
+    }
+    if(attr.indexOf('price') != -1){
+        series.push({
+            name: 'PRICE',
+            data: seriesData[1],
+            color: '#F9647D'
+        });
+    }
+    return series;
+}
+        
+    function drawLineChart(chartDiv, seriesData, aggData){
+      var range = $('#yaxis option:selected').text();
+      var max = 25;
+      var avg = 36;
+      var min = 55;
+      var series = getSeries(seriesData);
+      Highcharts.chart(chartDiv, {
+        chart: {
+            type: 'spline',
+            height: 300,
+            backgroundColor: '#414747',
+            style: { "color": "#fff", "fontSize": "16px" }
+        },
+        title: {
+            style: { "color": "#fff", "fontSize": "14px" },
+            text: 'Security for ' + range
+        },
+        subtitle: {
+            text: 'Irregular time data in Highcharts JS'
+        },
+        xAxis: {
+            type: 'datetime',
+            dateTimeLabelFormats: {
+                month: '%e. %b',
+                year: '%b'
+            },
+            plotBands:[{
+              color:'#fff'
+            }],
+            title: {
+                style: { "color": "#fff", "fontSize": "14px" },
+                text: 'Date'
+            }
+        },
+        yAxis: {
+            title: {
+                style: { "color": "#fff", "fontSize": "14px" },
+                text: 'Security'
+            },
+            min: 0
+        },
+        tooltip: {
+            shared: false,
+            useHTML: true,
+            formatter: function() {
+                if(this.series.name == 'PRICE'){
+                    min = aggData.MIN.price, max = aggData.MAX.price, avg = aggData.AVG.price
+                }else if(this.series.name == 'OAS'){
+                    min = aggData.MIN.oas, max = aggData.MAX.oas, avg = aggData.AVG.oas
+                }else if(this.series.name == 'YIELD'){
+                    min = aggData.MIN.yield, max = aggData.MAX.yield, avg = aggData.AVG.yield    
+                }
+                var tip = '<table style="float:left"><span>'+this.series.name+'</span>' +
+                '<tr><td style="color: '+this.series.color+'"><B>'+Highcharts.dateFormat('%e. %b', this.point.x) + ':' + this.point.y+'</B></td></tr>' +
+                '<tr><td style="text-align: center"><b>Min : '+min+'</b></td></tr>' +
+                '<tr><td style="text-align: center"><b>Max : '+max+'</b></td></tr>' +
+                '<tr><td style="text-align: center"><b>Average : '+avg+'</b></td></tr></table>';
+                return tip;
+            },
+            valueDecimals: 2
+        },
+
+        plotOptions: {
+            spline: {
+                marker: {
+                    enabled: true
+                }
+            }
+        },
+
+        series: series
+    });
+    }
+
+     
+</script>
