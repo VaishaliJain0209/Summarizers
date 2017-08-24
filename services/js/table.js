@@ -1,9 +1,9 @@
 
 var columnDefs = [
-    {headerName: "Effective Date", field: "effDate", width: 180},
-    {headerName: "Price", field: "price", width: 180},
-    {headerName: "OAS", field: "oas", width: 180},
-    {headerName: "Yield", field: "yield", width: 180}
+    {headerName: "Effective Date", field: "EFF_DT", width: 180},
+    {headerName: "Price", field: "PRICE", width: 180},
+    {headerName: "OAS", field: "OAS", width: 180},
+    {headerName: "Yield", field: "YIELD", width: 180}
 ];
 
 /*var rowData = [

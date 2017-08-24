@@ -1,6 +1,6 @@
 credentials={
- "accessKeyId" : "AKIAJJ3E2Q6CFLMYMN6A",
- "secretAccessKey" : "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",
+ "accessKeyId" : "AKIAIM7NBES73EJ6E7MA",
+ "secretAccessKey" : "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",
  "proxy":"http://localhost"
 }
 

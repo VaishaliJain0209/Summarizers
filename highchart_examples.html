@@ -41,13 +41,23 @@
         }
     
     </style>
-<body style="background-color: #333;">
+<body style="background-color: #eee;">
     <div class="container-fluid" >
-         <div class="col-md-12 row"><span style="color: white;font-size: x-large;"><B>Time Series Analysis</B></span></div>
+         <div class="col-md-12 row"><span style="font-size: x-large;"><B>Summarizers</B></span></div>
         <div class="row col-md-4" style="valign:center">
             <table  class="table" bgcolor="#414747">
             <tr><td>
-                <label style="color: white;">Range</label></td>
+                <label>Security</label></td>
+                <td><select id="securities" data-live-search="true" class="selectpicker" onchange="setAttrs()" style="height: 35px;min-width: 160px;">
+                </select>
+                </td></tr>
+            <tr><td>
+                <label>Attributes</label></td>
+                <td><select id="attrs" class="selectpicker" multiple onchange="drawChart()" style="height: 35px;min-width: 160px;">
+                </select>
+            </td></tr>
+           <tr><td>
+               <label>Range</label></td>
                <td>
                 <select id="yaxis" class="selectpicker" onchange=drawChart() style="height: 35px;min-width: 160px;" placeholder="Select Range">
                   <option value="1Y">1 Year</option>
@@ -56,21 +66,11 @@
                   <option value="4Y">4 Years</option>
                   <option value="5Y">5 Years</option>
                 </select>
-                </td></tr>
-            <tr><td>
-                <label style="color: white;">Security</label></td>
-                <td><select id="securities" data-live-search="true" class="selectpicker" onchange="setAttrs()" style="height: 35px;min-width: 160px;">
-                </select>
-            </td></tr>
-           <tr><td>
-               <label style="color: white;">Attributes</label></td>
-                <td><select id="attrs" class="selectpicker" multiple onchange="drawChart()" style="height: 35px;min-width: 160px;">
-                </select>
             </td></tr>
             </table>
         </div>
-        <div class="col-md-8"><div id="myGrid" style="height: 150px; width: 800px; margin-left:50px;" class="ag-dark"></div></div>
-        <div class="row col-md-12" style="margin-top: 20px;">
+        <div class="col-md-8"><div id="myGrid" style="height: 150px; width: 800px; margin-left:50px;" class="ag-fresh"></div></div>
+        <div class="row col-md-12" style="margin-top: 20px; border: 1px solid #eee">
             <div>
                 <div id="myLineChart"></div>
             </div>
@@ -107,7 +107,7 @@
         }).done(function(data) {
             $('#attrs').html('');
             $.each(data, function(index, obj) {
-                $('#attrs').append( $('<option></option>').val(obj.val).text(obj.text));
+                $('#attrs').append( $('<option selected></option>').val(obj.val).text(obj.text));
             }); 
             $('#attrs').selectpicker('refresh');
             drawChart();
@@ -129,9 +129,9 @@
         }).done(function(data) {
           gridOptions.api.setRowData(JSON.parse(data).rawData);
             $.each(JSON.parse(data).rawData, function(index, obj) {
-                oas.push([Date.parse(obj.effDate), obj.oas]);
-                 yield.push([Date.parse(obj.effDate), obj.yield]);
-                price.push([Date.parse(obj.effDate), obj.price]);
+                oas.push([Date.parse(obj.EFF_DT), obj.OAS]);
+                 yield.push([Date.parse(obj.EFF_DT), obj.YIELD]);
+                price.push([Date.parse(obj.EFF_DT), obj.PRICE]);
         }); 
         dataArr.push(oas);
         dataArr.push(price);
@@ -175,22 +175,22 @@
       var series = getSeries(seriesData);
       Highcharts.chart(chartDiv, {
         chart: {
-            type: 'spline',
-            height: 300,
-            backgroundColor: '#414747',
+            type: 'line',
+            height: 400,
+            backgroundColor: '#fff',
             style: { "color": "#fff", "fontSize": "16px" }
         },
         title: {
-            style: { "color": "#fff", "fontSize": "14px" },
+            style: { "fontSize": "14px" },
             text: 'Security for ' + range
         },
         subtitle: {
-            text: 'Irregular time data in Highcharts JS'
+            //text: 'Irregular time data in Highcharts JS'
         },
         xAxis: {
             type: 'datetime',
             dateTimeLabelFormats: {
-                month: '%e. %b',
+                month: '%e  %b',
                 year: '%b'
             },
             plotBands:[{
@@ -213,14 +213,14 @@
             useHTML: true,
             formatter: function() {
                 if(this.series.name == 'PRICE'){
-                    min = aggData.MIN.price, max = aggData.MAX.price, avg = aggData.AVG.price
+                    min = aggData.PRICE.MIN, max = aggData.PRICE.MAX, avg = aggData.PRICE.AVG
                 }else if(this.series.name == 'OAS'){
-                    min = aggData.MIN.oas, max = aggData.MAX.oas, avg = aggData.AVG.oas
+                    min = aggData.OAS.MIN, max = aggData.OAS.MAX, avg = aggData.OAS.AVG
                 }else if(this.series.name == 'YIELD'){
-                    min = aggData.MIN.yield, max = aggData.MAX.yield, avg = aggData.AVG.yield    
+                    min = aggData.YIELD.MIN, max = aggData.YIELD.MAX, avg = aggData.YIELD.AVG   
                 }
                 var tip = '<table style="float:left"><span>'+this.series.name+'</span>' +
-                '<tr><td style="color: '+this.series.color+'"><B>'+Highcharts.dateFormat('%e. %b', this.point.x) + ':' + this.point.y+'</B></td></tr>' +
+                '<tr><td style="color: '+this.series.color+';text-align: center"><B>'+Highcharts.dateFormat('%e  %b', this.point.x) + ':' + this.point.y+'</B></td></tr>' +
                 '<tr><td style="text-align: center"><b>Min : '+min+'</b></td></tr>' +
                 '<tr><td style="text-align: center"><b>Max : '+max+'</b></td></tr>' +
                 '<tr><td style="text-align: center"><b>Average : '+avg+'</b></td></tr></table>';
@@ -234,6 +234,9 @@
                 marker: {
                     enabled: true
                 }
+            },
+            series: {
+                lineWidth: 1
             }
         },
 

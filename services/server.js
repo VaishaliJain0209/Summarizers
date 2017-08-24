@@ -24,7 +24,9 @@ router.get('/', function(req, res) {
 
 router.get('/getView', function(req, res){
     console.log(req.query);
-    s3Obj.getData("/summarizersecurities/1234567/1yr", 'data.json', function(data){
+    var bucketName = "firs-hack2";
+    console.log(bucketName);
+    s3Obj.getData(bucketName + "/"+ req.query.range , req.query.security + '.json', function(data){
         console.log('data returned');
         res.json(data);
     });
@@ -35,11 +37,12 @@ router.get('/getView', function(req, res){
 router.get('/getSecurities', function(req, res){
    res.header("Access-Control-Allow-Origin", "*");    
    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-   /*dao.getSecurities(function(data){
+   console.log("Getting securities from database");
+   dao.getSecurities(function(data){
        console.log(data.size);
        res.json(data);
-   });*/
-   res.json([{id:1234567, name:1234567}, {id:98765, name:98765}]);
+   });
+   //res.json([{id:1234567, name:1234567}, {id:98765, name:98765}]);
 });
 
 router.get('/getSecurityAttrs', function(req, res){
